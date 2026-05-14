@@ -1,0 +1,20 @@
+FROM node:16
+
+ARG DEBIAN_FRONTEND=noninteractive
+ARG JEMALLOC_VERSION=5.3.0
+USER root
+RUN wget -qc https://github.com/jemalloc/jemalloc/releases/download/${JEMALLOC_VERSION}/jemalloc-${JEMALLOC_VERSION}.tar.bz2 -O - | tar -C /tmp -jx \
+  && cd /tmp/jemalloc-${JEMALLOC_VERSION} \
+  && ./configure \
+  && make \
+  && make install \
+  && rm -rf /tmp/jemalloc-${JEMALLOC_VERSION}
+ENV LD_PRELOAD=/usr/local/lib/libjemalloc.so.2
+
+RUN echo "deb http://archive.debian.org/debian buster main contrib non-free\n\
+deb-src http://archive.debian.org/debian buster main contrib non-free\n\
+deb http://archive.debian.org/debian-security buster/updates main\n\
+deb-src http://archive.debian.org/debian-security buster/updates main" \
+  | tee /etc/apt/sources.list > /dev/null
+RUN apt-get update && apt-get install -y vim curl telnet dnsutils
+RUN apt-get clean && rm -rf /var/lib/apt/lists
